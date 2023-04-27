@@ -1,0 +1,84 @@
+version: '3.9'
+
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    container_name: zookeeper
+    ports:
+      - 12181:2181
+    environment:
+      TZ: "Asia/Shanghai"
+    restart: always
+
+  kafka-node1:
+    image: wurstmeister/kafka:2.11-1.1.1
+    depends_on:
+      - zookeeper
+    restart: unless-stopped
+    container_name: kafka-node1
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${HOST}:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_HEAP_OPTS: "-Xmx256M -Xms128M"
+      TZ: "Asia/Shanghai"
+    volumes:
+      - ./kafka-node1/data:/kafka
+
+  kafka-node2:
+    image: wurstmeister/kafka:2.11-1.1.1
+    depends_on:
+      - zookeeper
+    restart: unless-stopped
+    container_name: kafka-node2
+    ports:
+      - 9093:9093
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${HOST}:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_HEAP_OPTS: "-Xmx256M -Xms128M"
+      TZ: "Asia/Shanghai"
+    volumes:
+      - ./kafka-node2/data:/kafka
+
+  kafka-node3:
+    image: wurstmeister/kafka:2.11-1.1.1
+    depends_on:
+      - zookeeper
+    restart: unless-stopped
+    container_name: kafka-node3
+    ports:
+      - 9094:9094
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${HOST}:9094
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9094
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_HEAP_OPTS: "-Xmx256M -Xms128M"
+      TZ: "Asia/Shanghai"
+    volumes:
+      - ./kafka-node3/data:/kafka
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    restart: always
+    ports:
+        - 10010:8080
+    volumes:
+        - /etc/localtime:/etc/localtime
+    environment:
+        - KAFKA_CLUSTERS_0_NAME=kafka-node1
+        - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka-node1:9092
+        - KAFKA_CLUSTERS_1_NAME=kafka-node2
+        - KAFKA_CLUSTERS_1_BOOTSTRAPSERVERS=kafka-node2:9093
+        - KAFKA_CLUSTERS_2_NAME=kafka-node3
+        - KAFKA_CLUSTERS_2_BOOTSTRAPSERVERS=kafka-node3:9094
